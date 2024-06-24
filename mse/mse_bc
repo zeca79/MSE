@@ -1,0 +1,80 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+
+ENTITY mse_bc IS
+	PORT (
+		clk : IN STD_LOGIC; -- ck
+		enable : IN STD_LOGIC; -- iniciar
+		reset : IN STD_LOGIC; -- reset
+		menor : IN STD_LOGIC;
+		read_mem : OUT STD_LOGIC; -- read
+		done : OUT STD_LOGIC; -- pronto
+		enMuxi : OUT STD_LOGIC;
+		enRegi : OUT STD_LOGIC;
+		enRegAB : OUT STD_LOGIC;
+		enMuxSoma : OUT STD_LOGIC;
+		enRegSoma : OUT STD_LOGIC;
+		enRegSubtracao : OUT STD_LOGIC;
+		enRegPotenciacao : OUT STD_LOGIC;
+		enRegResultado: OUT STD_LOGIC		
+		);	
+		
+end mse_bc;
+
+architecture arch of mse_bc is
+  type estado is (S0, S1, S2, S3, S4, S5, S6);
+  signal EA, PE: estado;
+begin
+
+process (clk, reset)
+begin
+  if reset = '1' then
+    EA <= S0;
+  elsif (rising_edge(clk)) then
+	 EA <= PE;
+  end if;
+end process;
+
+process (EA, menor, enable )
+begin
+  case EA is
+    when S0 =>
+      if enable = '1' then
+        PE <= S1;
+      else
+        PE <= S0;
+      end if;
+	 when S1 =>
+      PE <= S2;
+	 when S2 =>
+      if menor = '1' then
+        PE <= S3;
+      else
+        PE <= S6;
+		end if;
+	 when S3 =>
+      PE <= S4;
+	 when S4 =>
+      PE <= S5;
+	 when S5 =>
+  		PE <= S2;
+	 when S6 =>
+  		PE <= S0;	
+  end case;
+end process;
+
+-- lógica de saída
+
+	done <= '1' WHEN EA = S0 ELSE '0'; -- pronto
+	read_mem <= '1' WHEN EA = S3 ELSE '0'; -- read	
+	enRegAB <= '1' WHEN EA = S3 ELSE '0'; 
+	enMuxSoma <= '1' WHEN EA = S1 ELSE '0';
+	enMuxi  <= '1' WHEN EA = S1 ELSE '0';
+	enRegi <= '1' WHEN EA = S1 OR EA = S4 ELSE '0';
+	enRegSubtracao <= '1' WHEN EA = S4 ELSE '0';
+	enRegPotenciacao <= '1' WHEN EA = S5 ELSE '0';
+	enRegSoma <= '1' WHEN EA = S1 OR EA = S5 ELSE '0';
+	enRegResultado <= '1' WHEN EA = S6 ELSE '0';
+
+
+end arch;
