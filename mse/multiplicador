@@ -1,0 +1,21 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity multiplicador is
+    GENERIC (
+        N : POSITIVE := 8
+    );
+    Port (
+        A : in  STD_LOGIC_VECTOR(N-1 downto 0);
+        B : in  STD_LOGIC_VECTOR(N-1 downto 0);
+        P : out STD_LOGIC_VECTOR((2*N)-1 downto 0)
+    );
+end multiplicador;
+
+architecture Behavioral of multiplicador is
+begin
+    -- Multiplicação de A e B
+    P <= std_logic_vector(unsigned(A) * unsigned(B));
+
+end Behavioral;
