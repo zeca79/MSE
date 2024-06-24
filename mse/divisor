@@ -1,0 +1,20 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity divisor is
+	GENERIC (N : POSITIVE := 8);
+    Port (
+        numerador : in  STD_LOGIC_VECTOR(N-1 downto 0);
+        denominador : in  STD_LOGIC_VECTOR(N-1 downto 0); 
+        quociente : out  STD_LOGIC_VECTOR(N-1 downto 0);  
+        resto : out  STD_LOGIC_VECTOR(N-1 downto 0)  
+    );
+end divisor;
+
+architecture Behavioral of divisor is
+begin
+    -- Operação de divisão
+    quociente <= std_logic_vector(to_unsigned(to_integer(unsigned(numerador)) / to_integer(unsigned(denominador)), N));
+    resto <= std_logic_vector(to_unsigned(to_integer(unsigned(numerador)) mod to_integer(unsigned(denominador)), N));
+end Behavioral;
