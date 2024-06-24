@@ -1,0 +1,179 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use work.log_package.all;  -- Importa o pacote que contém a função log2
+
+ENTITY mse_bo IS
+GENERIC (
+		B : POSITIVE := 8; -- número de bits por amostra
+		OP : POSITIVE := 64; -- número de amostras por coluna
+		L : POSITIVE := 64 -- número de linhas organizadas na memória
+		);
+		
+	PORT (
+		
+		clk : IN STD_LOGIC; -- ck
+		sample_ori : IN STD_LOGIC_VECTOR (B-1 DOWNTO 0); -- Mem_A[end]
+		sample_can : IN STD_LOGIC_VECTOR (B-1 DOWNTO 0); -- Mem_B[end]
+		address : OUT STD_LOGIC_VECTOR (log2(L)-1 DOWNTO 0); -- end
+		mse_value : OUT STD_LOGIC_VECTOR ((2*B)-1 DOWNTO 0); --sad
+		resto : OUT STD_LOGIC_VECTOR (((2*B)+log2(64))-1 DOWNTO 0);
+		enMuxi : IN STD_LOGIC;
+		enRegi : IN STD_LOGIC;
+		enRegAB : IN STD_LOGIC;
+		enMuxSoma : IN STD_LOGIC;
+		enRegSoma : IN STD_LOGIC;
+		enRegResultado : IN STD_LOGIC;
+		enRegPotenciacao : IN STD_LOGIC;
+		enRegSubtracao : IN STD_LOGIC;
+		menor : OUT STD_LOGIC
+		);
+end mse_bo;
+
+architecture arch of mse_bo is
+
+signal Ssomai: STD_LOGIC_VECTOR (log2(L)-1 DOWNTO 0);
+signal Sout_reg_i, Sout_muxi: STD_LOGIC_VECTOR (log2(L) DOWNTO 0);
+signal SsubA, SsubB, Sout_regSubtrator, Ssubout : STD_LOGIC_VECTOR (B-1 DOWNTO 0);
+signal Sout_potenciacao, Sout_RegPotenciacao: STD_LOGIC_VECTOR ((2*B)-1 DOWNTO 0);
+signal Sout_somador, Sout_muxSoma, Sout_regsoma, Sout_divisor, sSomaA: STD_LOGIC_VECTOR (((2*B)+log2(64))-1 DOWNTO 0);
+signal Scout : STD_LOGIC;
+
+begin
+
+muxi : entity work.mux2para1
+	GENERIC MAP (N => (log2(L)+1))
+	PORT MAP(
+		a => Scout & Ssomai,
+		b => (others => '0'),
+		sel => enMuxi,
+		y => Sout_muxi
+	);
+	
+somadori : entity work.somador
+	GENERIC MAP (N => (log2(L)))
+	port MAP(
+		A => Sout_reg_i (log2(L)-1 downto 0),
+		B => "000001",
+		S => Ssomai,
+		cout => Scout
+	);
+
+reg_i : entity work.registrador 
+	GENERIC MAP(N => (log2(L)+1))
+	port MAP(
+    D => Sout_muxi,
+	 Reset => '0',
+    Enable => enRegi,
+    CLK => clk,
+    Q => Sout_reg_i
+	 );
+	 
+reg_A : entity work.registrador 
+	GENERIC MAP(N => B)
+	port MAP(
+    D => sample_ori,
+	 Reset => '0',
+    Enable => enRegAB,
+    CLK => clk,
+    Q => SsubA
+	 );
+	 
+reg_B : entity work.registrador
+	GENERIC MAP(N => B)
+	port MAP (
+    D => sample_can,
+	 Reset => '0',
+    Enable => enRegAB,
+    CLK => clk,
+    Q => SsubB
+	 );
+	 
+subtrator : entity work.subtractor
+	generic MAP(N => B)
+	port MAP(
+		a => SsubA,
+		b => SsubB,
+		s =>Ssubout
+	);
+
+RegSubtracao : entity work.registrador
+	GENERIC MAP(N => B)
+	port MAP (
+    D => Ssubout,
+	 Reset => '0',
+    Enable => enRegSubtracao,
+    CLK => clk,
+    Q => Sout_regSubtrator
+	 );
+	 
+potenciacao : entity work.multiplicador
+	GENERIC MAP (N => B)
+	port MAP(
+		A => Sout_regSubtrator,
+		B => Sout_regSubtrator,
+		P => Sout_potenciacao
+	 );	
+	
+RegPotenciacao : entity work.registrador
+	GENERIC MAP(N => (2*B))
+	port MAP (
+    D => Sout_potenciacao,
+	 Reset => '0',
+    Enable => enRegPotenciacao,
+    CLK => clk,
+    Q => Sout_RegPotenciacao
+	 );		
+	
+somador : entity work.somador
+	GENERIC MAP (N => ((2*B)+log2(64)))
+	port MAP(
+		A => sSomaA,
+		B => Sout_muxSoma,
+		S => Sout_somador
+	);
+	
+muxSoma : entity work.mux2para1
+	GENERIC MAP (N => ((2*B)+log2(64)))
+	PORT MAP(
+		a => Sout_somador,
+		b => (others => '0'),
+		sel => enMuxSoma,
+		y => Sout_muxSoma
+	);
+	
+reg_soma : entity work.registrador 
+	GENERIC MAP(N => ((2*B)+log2(64)))
+	port MAP (
+    D => Sout_muxSoma,
+	 Reset => '0',
+    Enable => enRegSoma,
+    CLK => clk,
+    Q => Sout_regsoma
+	 );	
+
+divisor : entity work.divisor
+	GENERIC MAP (N => ((2*B)+log2(64)))
+	port MAP(
+		numerador => Sout_regsoma,
+		denominador => std_logic_vector(to_unsigned(OP, Sout_regsoma'length)),
+		quociente => Sout_divisor,
+		resto => resto
+	 );	
+		 
+reg_Resultado : entity work.registrador
+	GENERIC MAP(N => 2*B)
+	port MAP (
+    D => Sout_divisor((2*B)-1 DOWNTO 0),
+	 Reset => '0',
+    Enable => enRegResultado,
+    CLK => clk,
+    Q => mse_value
+	 );	
+
+sSomaA <= "000000" & Sout_RegPotenciacao;          
+menor <= not Sout_reg_i(log2(L));
+address <= Sout_reg_i (log2(L)-1 downto 0);
+
+END architecture;		
+		
