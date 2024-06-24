@@ -1,0 +1,21 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+package log_package is
+    -- Função para calcular logaritmo na base 2 de um número inteiro
+    function log2(x: integer) return integer;
+end log_package;
+
+package body log_package is
+    function log2(x: integer) return integer is
+        variable result: integer := 0;
+        variable temp: integer := x;
+    begin
+        while (temp > 1) loop
+            temp := temp / 2;
+            result := result + 1;
+        end loop;
+        return result;
+    end function;
+end log_package;
