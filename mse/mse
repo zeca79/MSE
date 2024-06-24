@@ -1,1 +1,77 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+use work.log_package.all;  -- Importa o pacote que contém a função log2
 
+
+ENTITY mse IS
+	GENERIC (
+		B : POSITIVE := 8; -- número de bits por amostra
+		O : POSITIVE := 8; -- número de amostras por coluna
+		P : POSITIVE := 8; -- número de amostras por linha
+		L : POSITIVE := 64 -- número de linhas organizadas na memória
+		-----------------------------------------------------------------------
+	);
+	PORT (
+		
+		clk : IN STD_LOGIC; -- clk
+		enable : IN STD_LOGIC; -- iniciar
+		reset : IN STD_LOGIC; -- reset
+		sample_ori : IN STD_LOGIC_VECTOR (B-1 DOWNTO 0); -- Mem_A[end]
+		sample_can : IN STD_LOGIC_VECTOR (B-1 DOWNTO 0); -- Mem_B[end]
+		read_mem : OUT STD_LOGIC; -- read
+		address : OUT STD_LOGIC_VECTOR (log2(L)-1 DOWNTO 0); -- end
+		resto : OUT STD_LOGIC_VECTOR (((2*B)+log2(64))-1 DOWNTO 0);
+		mse_value : OUT STD_LOGIC_VECTOR ((2*B)-1 DOWNTO 0); -- MSE
+		done : OUT STD_LOGIC
+	);
+END ENTITY; -- mse
+
+ARCHITECTURE arch OF mse IS
+
+	signal enRegPotenciacao, enRegSubtracao, enRegSoma, enRegResultado, enRegi, enRegAB, menor, enMuxSoma, enMuxi: STD_LOGIC;
+ 
+begin
+ 
+MSE_bo : entity work.mse_bo
+	generic map (
+		B => B,
+		OP => (O*P),
+		L => L
+		)
+			  
+    port map (
+		clk  => clk ,
+		sample_ori => sample_ori,
+		sample_can => sample_can,
+		address => address,
+		resto => resto ,		mse_value => mse_value,
+		enRegi => enRegi,
+		enMuxi => enMuxi,
+		enRegAB => enRegAB,
+		enMuxSoma => enMuxSoma,
+		enRegPotenciacao => enRegPotenciacao,
+		enRegSubtracao => enRegSubtracao,
+		enRegSoma => enRegSoma,
+		enRegResultado => enRegResultado,
+		menor => menor
+    );
+	 
+MSE_bc : entity work.mse_bc
+    port map (
+		clk  => clk,
+		enable => enable,
+		reset => reset,
+		menor => menor,
+		read_mem => read_mem,
+		done => done,
+		enMuxi => enMuxi,
+		enRegi => enRegi,
+		enRegAB => enRegAB,
+		enMuxSoma => enMuxSoma,
+		enRegSoma => enRegSoma,
+		enRegResultado => enRegResultado,
+		enRegPotenciacao => enRegPotenciacao,
+		enRegSubtracao => enRegSubtracao
+    );
+
+END ARCHITECTURE; -- arch
