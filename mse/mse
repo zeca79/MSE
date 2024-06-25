@@ -6,8 +6,8 @@ use work.log_package.all;  -- Importa o pacote que contém a função log2
 ENTITY mse IS
 	GENERIC (
 		B : POSITIVE := 8; -- número de bits por amostra
-		O : POSITIVE := 8; -- número de amostras por coluna
-		P : POSITIVE := 8; -- número de amostras por linha
+		O : POSITIVE := 8; -- número de amostras por coluna do bloco
+		P : POSITIVE := 8; -- número de amostras por linha do bloco
 		L : POSITIVE := 64 -- número de linhas organizadas na memória
 		-----------------------------------------------------------------------
 	);
@@ -20,8 +20,8 @@ ENTITY mse IS
 		sample_can : IN STD_LOGIC_VECTOR (B-1 DOWNTO 0); -- Mem_B[end]
 		read_mem : OUT STD_LOGIC; -- read
 		address : OUT STD_LOGIC_VECTOR (log2(L)-1 DOWNTO 0); -- end
-		resto : OUT STD_LOGIC_VECTOR (((2*B)+log2(64))-1 DOWNTO 0);
-		mse_value : OUT STD_LOGIC_VECTOR ((2*B)-1 DOWNTO 0); -- MSE
+		resto : OUT STD_LOGIC_VECTOR (B-1 DOWNTO 0); -- sobra do truncamento
+		mse_value : OUT STD_LOGIC_VECTOR ((2*B)-1 DOWNTO 0); -- MSE (resultado truncado)
 		done : OUT STD_LOGIC
 	);
 END ENTITY; -- mse
@@ -44,7 +44,8 @@ MSE_bo : entity work.mse_bo
 		sample_ori => sample_ori,
 		sample_can => sample_can,
 		address => address,
-		resto => resto ,		mse_value => mse_value,
+		resto => resto ,		
+		mse_value => mse_value,
 		enRegi => enRegi,
 		enMuxi => enMuxi,
 		enRegAB => enRegAB,
