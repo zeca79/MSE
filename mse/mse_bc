@@ -22,7 +22,7 @@ ENTITY mse_bc IS
 end mse_bc;
 
 architecture arch of mse_bc is
-  type estado is (S0, S1, S2, S3, S4, S5, S6);
+  type estado is (S0, S1, S2, S3, S4, S5, S6, S7);
   signal EA, PE: estado;
 begin
 
@@ -44,22 +44,24 @@ begin
       else
         PE <= S0;
       end if;
-	 when S1 =>
+    when S1 =>
       PE <= S2;
-	 when S2 =>
+    when S2 =>
       if menor = '1' then
         PE <= S3;
       else
-        PE <= S6;
-		end if;
-	 when S3 =>
+        PE <= S7;
+      end if;
+    when S3 =>
       PE <= S4;
-	 when S4 =>
+    when S4 =>
       PE <= S5;
-	 when S5 =>
-  		PE <= S2;
-	 when S6 =>
-  		PE <= S0;	
+    when S5 =>
+      PE <= S6;
+    when S6 =>
+      PE <= S2;
+    when S7 =>
+      PE <= S0;	
   end case;
 end process;
 
@@ -73,8 +75,8 @@ end process;
 	enRegi <= '1' WHEN EA = S1 OR EA = S4 ELSE '0';
 	enRegSubtracao <= '1' WHEN EA = S4 ELSE '0';
 	enRegPotenciacao <= '1' WHEN EA = S5 ELSE '0';
-	enRegSoma <= '1' WHEN EA = S1 OR EA = S5 ELSE '0';
-	enRegResultado <= '1' WHEN EA = S6 ELSE '0';
+	enRegSoma <= '1' WHEN EA = S1 OR EA = S6 ELSE '0';
+	enRegResultado <= '1' WHEN EA = S7 ELSE '0';
 
 
 end arch;
