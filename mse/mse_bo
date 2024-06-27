@@ -6,8 +6,7 @@ use work.log_package.all;  -- Importa o pacote que contém a função log2
 ENTITY mse_bo IS
 GENERIC (
 		B : POSITIVE := 8; -- número de bits por amostra
-		OP : POSITIVE := 64; -- número de amostras por coluna
-		L : POSITIVE := 64 -- número de linhas organizadas na memória
+		OP : POSITIVE := 64 -- dimensão do bloco (8x8)
 		);
 		
 	PORT (
@@ -15,9 +14,9 @@ GENERIC (
 		clk : IN STD_LOGIC; -- ck
 		sample_ori : IN STD_LOGIC_VECTOR (B-1 DOWNTO 0); -- Mem_A[end]
 		sample_can : IN STD_LOGIC_VECTOR (B-1 DOWNTO 0); -- Mem_B[end]
-		address : OUT STD_LOGIC_VECTOR (log2(L)-1 DOWNTO 0); -- end
+		address : OUT STD_LOGIC_VECTOR (log2(OP)-1 DOWNTO 0); -- end
 		mse_value : OUT STD_LOGIC_VECTOR ((2*B)-1 DOWNTO 0); --sad
-		resto : OUT STD_LOGIC_VECTOR (B-1 DOWNTO 0);
+		resto : OUT STD_LOGIC_VECTOR ((2*B)-1 DOWNTO 0);
 		enMuxi : IN STD_LOGIC;
 		enRegi : IN STD_LOGIC;
 		enRegAB : IN STD_LOGIC;
@@ -32,17 +31,17 @@ end mse_bo;
 
 architecture arch of mse_bo is
 
-signal Ssomai: STD_LOGIC_VECTOR (log2(L)-1 DOWNTO 0);
-signal Sout_reg_i, Sout_muxi: STD_LOGIC_VECTOR (log2(L) DOWNTO 0);
+signal Ssomai: STD_LOGIC_VECTOR (log2(OP)-1 DOWNTO 0);
+signal Sout_reg_i, Sout_muxi: STD_LOGIC_VECTOR (log2(OP) DOWNTO 0);
 signal SsubA, SsubB, Sout_regSubtrator, Ssubout : STD_LOGIC_VECTOR (B-1 DOWNTO 0);
 signal Sout_potenciacao, Sout_RegPotenciacao: STD_LOGIC_VECTOR ((2*B)-1 DOWNTO 0);
-signal Sout_somador, Sout_muxSoma, Sout_regsoma, Sout_divisor, sSoma, Sresto: STD_LOGIC_VECTOR (((2*B)+log2(64))-1 DOWNTO 0);
+signal Sout_somador, Sout_muxSoma, Sout_regsoma, Sout_divisor, sSoma, Sresto: STD_LOGIC_VECTOR (((2*B)+log2(OP))-1 DOWNTO 0);
 signal Scout : STD_LOGIC;
 
 begin
 
 muxi : entity work.mux2para1
-	GENERIC MAP (N => (log2(L)+1))
+	GENERIC MAP (N => (log2(OP)+1))
 	PORT MAP(
 		a => Scout & Ssomai,
 		b => (others => '0'),
@@ -51,42 +50,42 @@ muxi : entity work.mux2para1
 	);
 	
 somadori : entity work.somador
-	GENERIC MAP (N => (log2(L)))
+	GENERIC MAP (N => (log2(OP)))
 	port MAP(
-		A => Sout_reg_i (log2(L)-1 downto 0),
-		B => "000001",
+		A => Sout_reg_i (log2(OP)-1 downto 0),
+		B => std_logic_vector(to_unsigned(1, log2(OP))),
 		S => Ssomai,
 		cout => Scout
 	);
 
 reg_i : entity work.registrador 
-	GENERIC MAP(N => (log2(L)+1))
+	GENERIC MAP(N => (log2(OP)+1))
 	port MAP(
-    D => Sout_muxi,
-	 Reset => '0',
-    Enable => enRegi,
-    CLK => clk,
-    Q => Sout_reg_i
+		D => Sout_muxi,
+		Reset => '0',
+		Enable => enRegi,
+		CLK => clk,
+		Q => Sout_reg_i
 	 );
 	 
 reg_A : entity work.registrador 
 	GENERIC MAP(N => B)
 	port MAP(
-    D => sample_ori,
-	 Reset => '0',
-    Enable => enRegAB,
-    CLK => clk,
-    Q => SsubA
+		D => sample_ori,
+		Reset => '0',
+		Enable => enRegAB,
+		CLK => clk,
+		Q => SsubA
 	 );
 	 
 reg_B : entity work.registrador
 	GENERIC MAP(N => B)
 	port MAP (
-    D => sample_can,
-	 Reset => '0',
-    Enable => enRegAB,
-    CLK => clk,
-    Q => SsubB
+		D => sample_can,
+		Reset => '0',
+		Enable => enRegAB,
+		CLK => clk,
+		Q => SsubB
 	 );
 	 
 subtrator : entity work.subtractor
@@ -100,11 +99,11 @@ subtrator : entity work.subtractor
 RegSubtracao : entity work.registrador
 	GENERIC MAP(N => B)
 	port MAP (
-    D => Ssubout,
-	 Reset => '0',
-    Enable => enRegSubtracao,
-    CLK => clk,
-    Q => Sout_regSubtrator
+		D => Ssubout,
+		Reset => '0',
+		Enable => enRegSubtracao,
+		CLK => clk,
+		Q => Sout_regSubtrator
 	 );
 	 
 potenciacao : entity work.multiplicador
@@ -118,15 +117,15 @@ potenciacao : entity work.multiplicador
 RegPotenciacao : entity work.registrador
 	GENERIC MAP(N => (2*B))
 	port MAP (
-    D => Sout_potenciacao,
-	 Reset => '0',
-    Enable => enRegPotenciacao,
-    CLK => clk,
-    Q => Sout_RegPotenciacao
+		D => Sout_potenciacao,
+		Reset => '0',
+		Enable => enRegPotenciacao,
+		CLK => clk,
+		Q => Sout_RegPotenciacao
 	 );		
 	
 somador : entity work.somador
-	GENERIC MAP (N => ((2*B)+log2(64)))
+	GENERIC MAP (N => ((2*B)+log2(OP)))
 	port MAP(
 		A => sSoma,
 		B => Sout_regsoma,
@@ -134,7 +133,7 @@ somador : entity work.somador
 	);
 	
 muxSoma : entity work.mux2para1
-	GENERIC MAP (N => ((2*B)+log2(64)))
+	GENERIC MAP (N => ((2*B)+log2(OP)))
 	PORT MAP(
 		a => Sout_somador,
 		b => (others => '0'),
@@ -143,17 +142,17 @@ muxSoma : entity work.mux2para1
 	);
 	
 reg_soma : entity work.registrador 
-	GENERIC MAP(N => ((2*B)+log2(64)))
+	GENERIC MAP(N => ((2*B)+log2(OP)))
 	port MAP (
-    D => Sout_muxSoma,
-	 Reset => '0',
-    Enable => enRegSoma,
-    CLK => clk,
-    Q => Sout_regsoma
+		D => Sout_muxSoma,
+		Reset => '0',
+		Enable => enRegSoma,
+		CLK => clk,
+		Q => Sout_regsoma
 	 );	
 
 divisor : entity work.divisor
-	GENERIC MAP (N => ((2*B)+log2(64)))
+	GENERIC MAP (N => ((2*B)+log2(OP)))
 	port MAP(
 		numerador => Sout_regsoma,
 		denominador => std_logic_vector(to_unsigned(OP, Sout_regsoma'length)),
@@ -164,17 +163,17 @@ divisor : entity work.divisor
 reg_Resultado : entity work.registrador
 	GENERIC MAP(N => 2*B)
 	port MAP (
-    D => Sout_divisor((2*B)-1 DOWNTO 0),
-	 Reset => '0',
-    Enable => enRegResultado,
-    CLK => clk,
-    Q => mse_value
-	 );	
+		D => Sout_divisor((2*B)-1 DOWNTO 0),
+		Reset => '0',
+		Enable => enRegResultado,
+		CLK => clk,
+		Q => mse_value
+	 );
 
-sSoma <= "000000" & Sout_RegPotenciacao;
-resto <= Sresto(((2*B)+log2(64))-1 DOWNTO 14);         
-menor <= not Sout_reg_i(log2(L));
-address <= Sout_reg_i (log2(L)-1 downto 0);
+sSoma(((2*B)+log2(OP))-1 DOWNTO 2*B) <= (others => '0');
+sSoma((2*B)-1 DOWNTO 0) <= Sout_RegPotenciacao;
+resto <= Sresto(((2*B)+log2(OP))-1 DOWNTO log2(OP));         
+menor <= not Sout_reg_i(log2(OP));
+address <= Sout_reg_i (log2(OP)-1 downto 0);
 
-END architecture;		
-		
+END architecture;
