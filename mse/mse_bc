@@ -35,7 +35,7 @@ begin
   end if;
 end process;
 
-process (EA, menor, enable )
+process (EA)
 begin
   case EA is
     when S0 =>
@@ -44,24 +44,24 @@ begin
       else
         PE <= S0;
       end if;
-    when S1 =>
+	 when S1 =>
       PE <= S2;
-    when S2 =>
+	 when S2 =>
       if menor = '1' then
         PE <= S3;
       else
         PE <= S7;
-      end if;
-    when S3 =>
+		end if;
+	 when S3 =>
       PE <= S4;
-    when S4 =>
+	 when S4 =>
       PE <= S5;
-    when S5 =>
-      PE <= S6;
-    when S6 =>
-      PE <= S2;
-    when S7 =>
-      PE <= S0;	
+	 when S5 =>
+  		PE <= S6;
+	 when S6 =>
+  		PE <= S2;
+	 when S7 =>
+  		PE <= S0;	
   end case;
 end process;
 
@@ -77,6 +77,5 @@ end process;
 	enRegPotenciacao <= '1' WHEN EA = S5 ELSE '0';
 	enRegSoma <= '1' WHEN EA = S1 OR EA = S6 ELSE '0';
 	enRegResultado <= '1' WHEN EA = S7 ELSE '0';
-
 
 end arch;
