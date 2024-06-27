@@ -31,10 +31,11 @@ end mse_bo;
 
 architecture arch of mse_bo is
 
-signal Ssomai: STD_LOGIC_VECTOR (log2(OP)-1 DOWNTO 0);
-signal Sout_reg_i, Sout_muxi: STD_LOGIC_VECTOR (log2(OP) DOWNTO 0);
+signal Ssomai : STD_LOGIC_VECTOR (log2(OP)-1 DOWNTO 0);
+signal Sout_reg_i, Sout_muxi : STD_LOGIC_VECTOR (log2(OP) DOWNTO 0);
 signal SsubA, SsubB, Sout_regSubtrator, Ssubout : STD_LOGIC_VECTOR (B-1 DOWNTO 0);
-signal Sout_potenciacao, Sout_RegPotenciacao: STD_LOGIC_VECTOR ((2*B)-1 DOWNTO 0);
+signal Sout_potenciacao, Sout_RegPotenciacao : STD_LOGIC_VECTOR ((2*B)-1 DOWNTO 0);
+signal Sresultado : STD_LOGIC_VECTOR ((4*B)-1 DOWNTO 0);
 signal Sout_somador, Sout_muxSoma, Sout_regsoma, Sout_divisor, sSoma, Sresto: STD_LOGIC_VECTOR (((2*B)+log2(OP))-1 DOWNTO 0);
 signal Scout : STD_LOGIC;
 
@@ -161,18 +162,19 @@ divisor : entity work.divisor
 	 );	
 		 
 reg_Resultado : entity work.registrador
-	GENERIC MAP(N => 2*B)
+	GENERIC MAP(N => 4*B)
 	port MAP (
-		D => Sout_divisor((2*B)-1 DOWNTO 0),
+		D => Sout_divisor((2*B)-1 DOWNTO 0) & Sresto(((2*B)+log2(OP))-1 DOWNTO log2(OP)),
 		Reset => '0',
 		Enable => enRegResultado,
 		CLK => clk,
-		Q => mse_value
+		Q => Sresultado
 	 );
 
+mse_value <= Sresultado ((4*B)-1 DOWNTO (2*B));
+resto <= Sresultado ((2*B)-1 DOWNTO 0); 
 sSoma(((2*B)+log2(OP))-1 DOWNTO 2*B) <= (others => '0');
 sSoma((2*B)-1 DOWNTO 0) <= Sout_RegPotenciacao;
-resto <= Sresto(((2*B)+log2(OP))-1 DOWNTO log2(OP));         
 menor <= not Sout_reg_i(log2(OP));
 address <= Sout_reg_i (log2(OP)-1 downto 0);
 
