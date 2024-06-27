@@ -5,8 +5,8 @@ use work.log_package.all;  -- Importa o pacote que contém a função log2
 ENTITY mse IS
 	GENERIC (
 		B : POSITIVE := 8; -- número de bits por amostra
-		O : POSITIVE := 8; -- número de amostras por coluna do bloco
-		P : POSITIVE := 8 -- número de amostras por linha do bloco
+		O : POSITIVE := 8; -- número de amostras por coluna do bloco (em potência de 2)
+		P : POSITIVE := 8 -- número de amostras por linha do bloco (em potência de 2)
 
 		-----------------------------------------------------------------------
 	);
