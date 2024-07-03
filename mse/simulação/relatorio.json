@@ -1,0 +1,28 @@
+{
+    "grupo": {
+        "nome": "Grupo 3",
+        "alunos": [{"nome": "Gibram Goulart Farias", "matricula": "20200402"},
+		   {"nome": "Marco Jose Pedro", "matricula": "20105254"}, 
+		   {"nome": "Oldemir Chiocchetta Junior", "matricula": "22100863"},
+		   {"nome": "Otávio Gums Willrich", "matricula": "22102704"},
+		   {"nome": "Vinícius Coscarelli Mesquita", "matricula": "22250652"},
+		   {"nome": "Vinicius de Campos Pereira", "matricula": "20103807"}]
+    },
+    "quartus": {
+        "os": "Windows 10",
+        "versao": "13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition",
+        "fpga": {
+            "familia": "Cyclone III",
+            "dispositivo": "EP3C5E144C7"
+        }
+    },
+    "utilizacao": {
+        "total combinational functions": 676 / 5,136 ( 13 % ),
+        "dedicated logic registers": 84 / 5,136 ( 2 % ),
+        "total pins": 59 / 95 ( 62 % )
+    },
+    "atraso": {
+        "Fmax": 19.95,
+	"unidade": "MHz"
+    }
+}
