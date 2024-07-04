@@ -89,7 +89,7 @@ reg_B : entity work.registrador
 		Q => SsubB
 	 );
 	 
-subtrator : entity work.subtractor
+subtrator : entity work.subtrator
 	generic MAP(N => B)
 	port MAP(
 		a => SsubA,
